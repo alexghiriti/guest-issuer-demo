@@ -194,5 +194,54 @@
         },
         "sessionTypeId": 3,
         "scheduledType": "meeting"
+    },
+    {
+        "id": "3e027fc7821548caa53ea1ed7995fa58",
+        "meetingNumber": "27313247555",
+        "title": "test_meeting",
+        "password": "rAismiZd372",
+        "meetingType": "meetingSeries",
+        "state": "active",
+        "timezone": "Europe/Vienna",
+        "start": "2022-04-15T10:00:00+02:00",
+        "end": "2022-04-15T11:00:00+02:00",
+        "hostUserId": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jNTVkNDY1My0zNzg1LTRhZTQtOTc1ZC02NDQ3NmVjZGM2NTg",
+        "hostDisplayName": "Alex Ghiriti",
+        "hostEmail": "alex@kbcg.eu",
+        "hostKey": "505738",
+        "siteUrl": "kbcgeu.webex.com",
+        "webLink": "https://kbcgeu.webex.com/kbcgeu/j.php?MTID=mdc10ef2a802480b786234904edf4c615",
+        "sipAddress": "27313247555@kbcgeu.webex.com",
+        "dialInIpAddress": "62.109.219.4",
+        "enabledAutoRecordMeeting": false,
+        "allowAnyUserToBeCoHost": false,
+        "allowFirstUserToBeCoHost": false,
+        "allowAuthenticatedDevices": false,
+        "enabledJoinBeforeHost": false,
+        "joinBeforeHostMinutes": 0,
+        "enableConnectAudioBeforeHost": false,
+        "excludePassword": true,
+        "publicMeeting": false,
+        "enableAutomaticLock": false,
+        "unlockedMeetingJoinSecurity": "allowJoin",
+        "telephony": {
+            "accessCode": "27313247555",
+            "callInNumbers": [
+                {
+                    "label": "Germany Toll",
+                    "callInNumber": "+49-619-6781-9736",
+                    "tollType": "toll"
+                }
+            ],
+            "links": [
+                {
+                    "rel": "globalCallinNumbers",
+                    "href": "/v1/meetings/3e027fc7821548caa53ea1ed7995fa58/globalCallinNumbers",
+                    "method": "GET"
+                }
+            ]
+        },
+        "sessionTypeId": 3,
+        "scheduledType": "meeting"
     }
 ]

@@ -1,14 +1,17 @@
 import json
-from tkinter import Widget
 import requests
 import webbrowser
 import jwt
 import time
-import subprocess
+import base64
 
-token = 'NjQ4M2E0ZDItMjUxNi00ZmRkLTgyNGItNmVhOTdiYzlmMzcwYzg5MzhmN2MtMDc0_PE93_298d3c23-9d31-4483-9cfa-1e6a5288cf32'
-gi_id = 'Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL09SR0FOSVpBVElPTi9kNDg0YjExMS02MGUwLTQwNTYtOTQ1Ni1iMjIxZGI1NTJhZmY'
-gi_pwd = 'A/kOKIqrHh6Er/tYsVcG1KbN1Owaa2C0qt9jO4dTfjA='
+creds = None
+with open('credentials.json', 'r') as c:
+    creds = json.load(c)
+
+int_creds = creds['integration_creds']
+gi_creds = creds['guest_issuer']
+token = creds['token']
 
 
 def create_meeting(title, start, end):
@@ -32,23 +35,53 @@ def create_meeting(title, start, end):
     "timezone": "Europe/Vienna"
     })
     headers = {
-    'Authorization': f'Bearer {token}',
+    'Authorization': f'Bearer {token["access_token"]}',
     'Content-Type': 'application/json',
     }
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(f"POST, URL: {url}, HEADERS: {headers}, PAYLOAD: {payload}")
+    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
     text = response.json()
     print(f"Meeting Created! {text['id']}, Meeting No: {text['meetingNumber']}")
-    meetings_db = open('meetings.json', 'r')
-    meetings = json.load(meetings_db)
-    meetings_db.close()
-    if not meetings:
-        meetings = list()
+    meetings = list()
+    try:
+        meetings_db = open('meetings.json', 'r')
+        meetings = json.load(meetings_db)
+        meetings_db.close()
+    except FileNotFoundError as e:
+        print(e)
     meetings.append(text)
     meetings_db = open('meetings.json', 'w+')
     json.dump(meetings, meetings_db, indent = 4)
 
-    
+def login():
+    webbrowser.open(int_creds['auth_uri'])
+
+def authorize(code):
+    url = "https://webexapis.com/v1/access_token"
+
+    payload = json.dumps({
+    "grant_type": int_creds['grant_type'],
+    "client_id": int_creds['client_id'],
+    "client_secret": int_creds['client_secret'],
+    "code": code,
+    "redirect_uri": int_creds['redirect_uri']
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
+    print(response.json())
+    token = response.json()
+    data = ''
+    with open('credentials.json', 'r+') as c:
+        data = json.load(c)
+    with open('credentials.json', 'w+') as c:
+        data['token'] = token
+        json.dump(data, c, indent=4)
+
+
 
 
 def add_part(name, mail, meeting_id):
@@ -63,12 +96,12 @@ def add_part(name, mail, meeting_id):
     "sendEmail": False
     })
     headers = {
-    'Authorization': f'Bearer {token}',
+    'Authorization': f'Bearer {token["access_token"]}',
     'Content-Type': 'application/json',
 }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(f"POST, URL: {url}, HEADERS: {headers}, PAYLOAD: {payload}")
+    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
     print(response.status_code)
     print("participant added")
 
@@ -87,18 +120,22 @@ def create_jwt(sub, name):
     payload = {
         "sub":sub,
         "name": name,
-        "iss": gi_id,
+        "iss": gi_creds['gi_id'],
         "exp" : int(time.time())+3600*8
+
     }
-    code = jwt.encode(payload, gi_pwd, algorithm='HS256')
+    decoded_secret =base64.b64decode(gi_creds['gi_secret'])
+    code = jwt.encode(payload, decoded_secret, algorithm='HS256')
     print(code)
     return code
 
 
 def token_exchange(jwt):
-    header = {'Authorization': f'Bearer {jwt}'}
-    resp = requests.post('https://webexapis.com/v1/jwt/login', headers=header)
-    print(f"POST, URL: {'https://webexapis.com/v1/jwt/login'}, HEADERS: {header}, PAYLOAD:")
+    headers = {'Authorization': f'Bearer {jwt}'}
+    url = 'https://webexapis.com/v1/jwt/login'
+    resp = requests.post(url, headers=headers)
+    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {''}\n\nResponse\n")
+    print(resp.json())
     return resp.json()
     
 
@@ -128,13 +165,18 @@ def create_widget(meeting, token):
 def shell():
     print('ich.app demoscript: ')
     help = '''
-    1. create meeting (title, start, end)   -> create <title>, <start>, <end>
-    2. add participant (name, mail, meeting_id) -> add <name>, <mail>, <meeting_id>
-    3. goto meeting (meeting_id) -> goto <meeting_id>
-    4. exit
-    5. help -> display this help
-    6. issue guest ticket -> jwt <sub> <name>
-    7. exchange guest ticket for for access token -> exchange <jwt>
+    Description -> Command
+
+    1.  create meeting (title, start, end)   -> create <title>, <start>, <end>
+    2.  add participant (name, mail, meeting_id) -> add <name>, <mail>, <meeting_id>
+    3.  goto meeting (meeting_id) -> goto <meeting_id>
+    4.  exit the programm -> exit
+    5.  help -> display this help
+    6.  issue guest ticket -> jwt <sub> <name>
+    7.  exchange guest ticket for for access token -> exchange <jwt>
+    8.  create widget -> widget <meeting> <token>
+    9.  authorize webex integration -> login
+    10. create oauth access token -> auth <code>
 
     '''
     while True:
@@ -156,6 +198,10 @@ def shell():
             token_exchange(inp[1])
         elif inp[0] == 'widget':
             create_widget(inp[1], inp[2])
+        elif inp[0] == 'login':
+            login()
+        elif inp[0] == 'auth':
+            authorize(inp[1])
 
         
 def main():
