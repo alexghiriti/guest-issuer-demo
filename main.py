@@ -1,4 +1,5 @@
 import json
+import traceback
 import requests
 import webbrowser
 import jwt
@@ -14,7 +15,7 @@ gi_creds = creds['guest_issuer']
 token = creds['token']
 
 
-def create_meeting(title, start, end):
+def create_meeting(title: str, start, end):
     url = "https://webexapis.com/v1/meetings"
 
     payload = json.dumps({
@@ -29,7 +30,7 @@ def create_meeting(title, start, end):
     "allowFirstUserToBeCoHost": False,
     "allowAuthenticatedDevices": False,
     "sendEmail": False,
-    "title": title,
+    "title": title.replace('_', ' '),
     "start": start,
     "end": end,
     "timezone": "Europe/Vienna"
@@ -39,6 +40,7 @@ def create_meeting(title, start, end):
     'Content-Type': 'application/json',
     }
     response = requests.request("POST", url, headers=headers, data=payload)
+    print(response.text)
     print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
     text = response.json()
     print(f"Meeting Created! {text['id']}, Meeting No: {text['meetingNumber']}")
@@ -80,9 +82,6 @@ def authorize(code):
     with open('credentials.json', 'w+') as c:
         data['token'] = token
         json.dump(data, c, indent=4)
-
-
-
 
 def add_part(name, mail, meeting_id):
     url = "https://webexapis.com/v1/meetingInvitees"
@@ -180,28 +179,33 @@ def shell():
 
     '''
     while True:
-        inp = input('> ')
-        inp = inp.split(' ')
-        if inp[0] == 'exit':
-            break
-        elif inp[0] == 'create':
-            create_meeting(inp[1], inp[2], inp[3])
-        elif inp[0] == 'add':
-            add_part(inp[1], inp[2], inp[3])
-        elif inp[0] == 'goto':
-            goto_meeting(inp[1])
-        elif inp[0] == 'help':
-            print(help)
-        elif inp[0] == 'jwt':
-            create_jwt(inp[1], inp[2])
-        elif inp[0] == 'exchange':
-            token_exchange(inp[1])
-        elif inp[0] == 'widget':
-            create_widget(inp[1], inp[2])
-        elif inp[0] == 'login':
-            login()
-        elif inp[0] == 'auth':
-            authorize(inp[1])
+        try:
+            inp = input('> ')
+            inp = inp.split(' ')
+            if inp[0] == 'exit':
+                break
+            elif inp[0] == 'create':
+                create_meeting(inp[1], inp[2], inp[3])
+            elif inp[0] == 'add':
+                add_part(inp[1], inp[2], inp[3])
+            elif inp[0] == 'goto':
+                goto_meeting(inp[1])
+            elif inp[0] == 'help':
+                print(help)
+            elif inp[0] == 'jwt':
+                create_jwt(inp[1], inp[2])
+            elif inp[0] == 'exchange':
+                token_exchange(inp[1])
+            elif inp[0] == 'widget':
+                create_widget(inp[1], inp[2])
+            elif inp[0] == 'login':
+                login()
+            elif inp[0] == 'auth':
+                authorize(inp[1])
+        except KeyboardInterrupt as e:
+            exit()
+        except Exception as e:
+            print(traceback.format_exc())
 
         
 def main():

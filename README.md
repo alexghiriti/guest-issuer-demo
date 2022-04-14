@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# Webex x ich.app POC
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Dieses Projekt beinhaltet dient als "Prove of Concept" für die Integration zwischen der Webex Umgebung und der ich.app. Die nachfolgenden Zeilen sind in zwei Bereiche unterteilt, eine Inbetriebnahme-Anleitung und eine Beschreibung der verschiedenen Funktionen die benutzt werden, damit das POC einfach in eine vollwertige Web Applikation umgesetzt werden kann.
 
-## Available Scripts
+Ziel des Projektes ist, Webex Meetings sicherer zu gestalten, indem man Teilnehmer zuerst über die ich.app authentifiziert bevor diese das Meeting beitreten.
 
-In the project directory, you can run:
+## Inbetriebnahme
 
-### `npm start`
+### Step-by-Step installation
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Step-by-Step Anleitung für die Inbetriebnahme des Projekts
+##### Step 1 Admin Rechte
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Die Webapp kann auf allen gängigen Betriebsysteme ausgeführt werden. Ggf. werden Admin Rechte benötigt für die Installation der nötigen Software.
 
-### `npm test`
+##### Step 2 Node.js installieren
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Die Webapp basiert auf React, somit wird node.js benötigt. Die App läuft in der jetzigen Form nur mit der LTS version (16.14.2 LTS). Download link: https://nodejs.org/en/download/
 
-### `npm run build`
+##### Step 3 Python installieren
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Das Projekt und bestimmte module benötigen Python3. Unter Windows kann während der Installation folgende Option gesetzt werden damit Python3 gleich mitinstalliert wird. 
+_insert picture here_
+Sonnst kann Python auch über der offiziellen Website heruntergeladen und installiert werden:
+https://www.python.org/downloads. Sollte python unter Windows in dieser weise installiert werden, muss die executable zum "PATH" als system variable hinzugefügt werden. Das erledigt der installer wenn folgende option gesetzt wird.
+_insert_another_pic_here_
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+##### Step 3.5 PC Neustart
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Ein Neustart ist nicht immer notwendig, jenachdem was man alles bereits installiert gehabt hat. Falls alles frisch unter Windows installiert wurde, wird ein neustart empfolen. 
 
-### `npm run eject`
+##### Step 4 Diese Repository Clonen
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Sollte git vorhanden sein kann diese Repository einfach über:
+ 
+`git clone https://github.com/alexghiriti/guest-issuer-demo.git`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+ansonsten unter Code auf ZIP hrunterladen clicken und irgendwo entpacken.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+##### Step 5 Dependenicies Installieren
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
+Ein neues Admin-Terminal Fenster öffen, in den Projektordner navigieren und folgende Commands ausführen:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Webex Widget packages installieren mit:
+``npx install-peerdeps @webex/widgets``
+Python dependencies installieren mit:
+``pip install -r .\requirements.txt``
+npm dependencies installieren mit:
+``npm install``
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+##### Step 6 Programm Starten
 
-### Code Splitting
+Sobald alles installiert ist kann das Pythonskript über folgenden Kommand (dasselbe Terminal benutzen) ausgeführt werden:
+``py main.py``
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Bedienung des Python Skripts
 
-### Analyzing the Bundle Size
+Das Skript verfügt über einen CMD und versteht 10 commands: 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. create meeting (title, start, end) -> `create <title>, <start>, <end>`
+2. add participant (name, mail, meeting_id) -> `add <name>, <mail>, <meeting_id>`
+3. goto meeting (meeting_id) -> ``goto <meeting_id>``
+4. exit the programm -> ``exit``
+5. help -> ``display this help``
+6. issue guest ticket -> ``jwt <sub> <name>``
+7. exchange guest ticket for for access token -> ``exchange <jwt>``
+8. create widget -> ``widget <meeting> <token>``
+9. authorize webex integration -> ``login``
+10. create oauth access token -> ``auth <code>``
 
-### Making a Progressive Web App
+##### 1. Einen neuen Webex-Meeting erstellen
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+`create <title>, <start>, <end>` 
+Es wird ein standard webex-Meeting erstellt.
+Command-Parameter:
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+* ``title``: Titel des Meetings. Sollte der Titel aus mehrene Zeichen bestehen werden diese mit "_" dargestellt z.B Mein_Webex_Meeting = Mein Webex Meeting
+* ``start/end``: Start und Ende des Meeting in  ISO-Format: yyyy-mm-ddTHH:MM:SS. Start und Enddatum beziehen sich auf die Mitteleuropäischen Zeitzonen CET und CEST. BSP: 2022-04-21T14:30:00
