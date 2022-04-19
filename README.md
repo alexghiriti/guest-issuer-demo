@@ -1,45 +1,75 @@
 # Webex x ich.app POC
 
-Dieses Projekt beinhaltet dient als "Prove of Concept" für die Integration zwischen der Webex Umgebung und der ich.app. Die nachfolgenden Zeilen sind in zwei Bereiche unterteilt, eine Inbetriebnahme-Anleitung und eine Beschreibung der verschiedenen Funktionen die benutzt werden, damit das POC einfach in eine vollwertige Web Applikation umgesetzt werden kann.
+Diese Repository dient als "prove-of-concept" für eine Integration zwischen einer Authentifizierungssoftware und der Webex umgebung. Ziel des Projektes ist es, Unternehmen mehr Kontrolle und Sicherheit zu gewährleisten, indem man (vorallem Unternehmensexterne) Meeting-Teilnehmer über sichere dritte Stelle authentifiziert bevor diese ein Meeting beitreten. Auf diesen Grund kann "Inpersonation" weitensgehend verhindert werden, was es sicherer macht, sensible Informationen weiter zu geben. Auch die Meetings an sich werden sicherer, weil Meeting Inforamtionen nicht direkt mit User geteilt werden. Sollten diese dennoch freigegeben werden, sind nicht-authentifizierte Benutzer trotzdem nicht in der Lage ein gesichertes Meeting beizutreten. 
 
-Ziel des Projektes ist, Webex Meetings sicherer zu gestalten, indem man Teilnehmer zuerst über die ich.app authentifiziert bevor diese das Meeting beitreten.
+## Dokumentation
+Folgend werden die technischen Aspekte der Integration im Einzelnen beschrieben, erklärt und begründet. Das System besteht aus mehreren, von einander unabhängigen Bauteile nämlich:
+
+1. Meeting Creation
+2. Invite Creation
+3. Authentication Landing Page
+4. Authorization Server
+5. Webex Meetings React Widget
+
+Das Projekt wird immer aus der sicht zweier Aktoren beschrieben, der Meeting-erstellen und der Meeting Teilnehmer.
+
+### Meeting Creation
+Als erster Schritt muss ein Meeting erzeugt werden. Es gäbe die möglichkeit Meetings auch über die von Webex bereitgestellten Tools (Outlook scheduler, Webex-Site etc. ) zu erstellen. Damit aber die höchste Sicherheit erreicht werden kann. werden die Meetings über die Webex API erstellt. Dau wird eine Eigene Web App benötigt, die ein Erstellungsformular bereitstellt.
+##### API Kommunikation
+Um mit der API zu kommunizieren benötigt der erstellende Benutzer ein Lizensiertes Webex-Account. Die Standardlizensierung genügt. Die REST API verwendet als Authorizierung den OAuth 2.0 Standard.  
+
+![API Sequenzdi](http://placehold.jp/3d4070/ffffff/500x500.png)
+
+Das obige Sequenzdiagramm Zeigt den Datenfluss zwichen User, App und die Webex Server. Als ersten Schritt, nachdem ein Meeting-Ersteller die URL der App navigiert ist ein neuer Access Token zu erzeugen. Dazu sollte die App auf die Authentication-Page unserer Webex Integration zeigen. Diese wird ergeugt nachdem eine Integration auf developer.webex.com erstellt wird. Die Integration muss einmalig vom App ersteller Erzeugt werden diese ist dann allgemein gültig für alle Webex-Organizationen. Nachdem der User sich erfolgreich mit seinen Webex-Credentials angemeldet hat, wird ein Authorization Code erzeugt und per redirect an einen von uns erstellten Endpoint gesendet. Der Code wird dann per POST request gegen einen OAuth Bearer Token getauscht. Der Token ist standardmäßig 14 Tage lang gültig, kann aber mittels refresh token immer wieder refreshed werden. Mit diesem Token können nun per API Meetings erzeugt werden. 
+##### Das Meeting
+Meetings werden über den Meetings Enpoint erzeugt, die Dokumentation dieses Endpoints findet man [hier](https://developer.webex.com/docs/api/v1/meetings/create-a-meeting). Es werden folgende Parameter verwendet:
+```
+{
+"enabledAutoRecordMeeting": False,
+"allowAnyUserToBeCoHost": False,
+"enabledJoinBeforeHost": True,
+"enableConnectAudioBeforeHost": False,
+"excludePassword": True,
+"publicMeeting": False,
+"enabledWebcastView": False,
+"enableAutomaticLock": False,
+"allowFirstUserToBeCoHost": False,
+"allowAuthenticatedDevices": False,
+"sendEmail": False,
+"title": <title>,
+"start": <start>,
+"end": <end>,
+"timezone": "Europe/Vienna"
+}
+```
+`excludePassword` und `publicMeeting` stellen sicher, dass keine unerwünschten Teilnehmer das Meeting Teilehmen können. das Password darf nicht weitergegeben werden. Da man damit die Meetings auch ohne sich vorher zu registrieren, erstellen könnte. Im Erfolgsfall erhält man eine JSON-Antwort retour mit dem Meeting details. Wichtig für das Projekt ist die 11-Stellige Meetingnummer unter `"meetingNumber": "xxxxxxxxxxx"`. Die erzeugten Meetings sind nun so gesperrt, dass Sie keine Teilnehmer außer den erzuger selbst den Beitritt erlauben. Die Meetings gemeinsam mit den Access Token der Sie erzeugt hat müssen Serverseitig gesichert werden. 
+### Invite Creation
+Da man kein Einfluss über die eigenen Invitations von Webex nehmen kann, müssen eigene Invitations erstellt werden. Dazu wird nach dem Erstellen des Meetings zu einen neuen Formular weitergeleitet. Der Erstellende User wir hier gebeten, die E-Mail seiner Teilnehmer bekannt zu geben. Aus diesen E-Mails wird dann die interne Teilnehmerliste erzeugt. Die Teilnehmer erhalten dann die Meetingeinladung per E-Mail als .ics
+  
+
 
 ## Inbetriebnahme
-
 ### Step-by-Step installation
-
 Step-by-Step Anleitung für die Inbetriebnahme des Projekts
 ##### Step 1 Admin Rechte
-
 Die Webapp kann auf allen gängigen Betriebsysteme ausgeführt werden. Ggf. werden Admin Rechte benötigt für die Installation der nötigen Software.
-
 ##### Step 2 Node.js installieren
-
 Die Webapp basiert auf React, somit wird node.js benötigt. Die App läuft in der jetzigen Form nur mit der LTS version (16.14.2 LTS). Download link: https://nodejs.org/en/download/
-
 ##### Step 3 Python installieren
-
 Das Projekt und bestimmte module benötigen Python3. Unter Windows kann während der Installation folgende Option gesetzt werden damit Python3 gleich mitinstalliert wird. 
 _insert picture here_
 Sonnst kann Python auch über der offiziellen Website heruntergeladen und installiert werden:
 https://www.python.org/downloads. Sollte python unter Windows in dieser weise installiert werden, muss die executable zum "PATH" als system variable hinzugefügt werden. Das erledigt der installer wenn folgende option gesetzt wird.
 _insert_another_pic_here_
-
 ##### Step 3.5 PC Neustart
-
 Ein Neustart ist nicht immer notwendig, jenachdem was man alles bereits installiert gehabt hat. Falls alles frisch unter Windows installiert wurde, wird ein neustart empfolen. 
-
 ##### Step 4 Diese Repository Clonen
-
 Sollte git vorhanden sein kann diese Repository einfach über:
  
-`git clone https://github.com/alexghiriti/guest-issuer-demo.git`
+`git clone https://github.com/alexghiriti/guest-issuer-demo.git` 
 
-ansonsten unter Code auf ZIP hrunterladen clicken und irgendwo entpacken.
-
+ansonsten unter Code auf ZIP hrunterladen clicken und irgendwo entpacken. 
 ##### Step 5 Dependenicies Installieren
-
-
 Ein neues Admin-Terminal Fenster öffen, in den Projektordner navigieren und folgende Commands ausführen:
 
 Webex Widget packages installieren mit:
@@ -48,14 +78,13 @@ Python dependencies installieren mit:
 ``pip install -r .\requirements.txt``
 npm dependencies installieren mit:
 ``npm install``
-
+Bei SSL issues:
+``npm config set strict-ssl false``
 ##### Step 6 Programm Starten
-
 Sobald alles installiert ist kann das Pythonskript über folgenden Kommand (dasselbe Terminal benutzen) ausgeführt werden:
 ``py main.py``
 
 ### Bedienung des Python Skripts
-
 Das Skript verfügt über einen CMD und versteht 10 commands: 
 
 1. create meeting (title, start, end) -> `create <title>, <start>, <end>`
