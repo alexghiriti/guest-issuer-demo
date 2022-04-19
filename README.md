@@ -69,11 +69,13 @@ Das Skript verfügt über einen CMD und versteht 10 commands:
 9. authorize webex integration -> ``login``
 10. create oauth access token -> ``auth <code>``
 
-##### 1. Einen neuen Webex-Meeting erstellen
+Um das Widget zu starten und einen User zu authorisieren werden folgende Kommands in dieser Reihenfolge, benötigt.
 
-`create <title>, <start>, <end>` 
-Es wird ein standard webex-Meeting erstellt.
-Command-Parameter:
-
-* ``title``: Titel des Meetings. Sollte der Titel aus mehrene Zeichen bestehen werden diese mit "_" dargestellt z.B Mein_Webex_Meeting = Mein Webex Meeting
-* ``start/end``: Start und Ende des Meeting in  ISO-Format: yyyy-mm-ddTHH:MM:SS. Start und Enddatum beziehen sich auf die Mitteleuropäischen Zeitzonen CET und CEST. BSP: 2022-04-21T14:30:00
+1. `login` - Öffnet ein Webex Login Fenster. Hier kann man die Webex Integration Authorizieren damit man einen Zugang zu der Webex API bekommt. Falls das Erfolgreich gewesen ist wird auf der Seite einen Code angezeigt.
+2. `auth <code>` - Dieser Code (Lifetime 30 min) kann für einen OAuth2 Bearer Access Token getauscht werden. Im erfolgsfall wird dieser Token automatisch in `credentials.json` gespeichert.
+3. (optional) `create <title> <start> <end>` - Es kann nun einen Meeting erstellt werden. `<title>` ist der Namen  des Meetings (Namen die aus meheren Wörter bestehen werden mit "_" notiert z.B.: Mein_Meeting = Mein Meeting). `<start> / <end>` bezeichnen das Start- und Enddatum des meetings in ISO-Format yyyy-mm-ddTHH:MM:SS (2022-03-15T12:30:00)
+4. ``jwt <sub> <name>`` - Damit kann einen Guest Token erstellt werden. `<sub>` ist ein eindeutiger identifier und kann benutzt werden um user intern zu identifizieren. `<name>` ist der Anzeigenamen des Users. Spaces werden mit "_" dargestellt (z.B.: John_Doe=John Doe)
+5. ``exchange <jwt>`` - Damit ein User einem Meeting beitreten kann muss dieser jwt gegen einen Bearer Access Token getauscht werden. Im Erfolgsfall wird hier eien Token zurückgegeben.
+6. `Exchange <jwt>` - Der Guest Token muss in ein Api Access Token umgeandlet werden damit User Meetings beitreten können.
+7. `widget <meeting> <token>` - Damit kann das Reac Widget getartet werden. `<meeting>` kann entwerder die im Schritt 3 erzeugte Meetingnummer oder eine E-Mail von einem Webex user verwendet werden. `<token>` steht für den in vorhinein erzeugte Token. 
+8. Das Python Skript kann nun geschlossen werden (Strg+C). Im Selben Terminal nun `npm start` ausführen. das Widget wird in ein Browserfenster starten. 

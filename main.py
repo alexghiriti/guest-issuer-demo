@@ -118,7 +118,7 @@ def goto_meeting(meeting_id):
 def create_jwt(sub, name):
     payload = {
         "sub":sub,
-        "name": name,
+        "name": name.replace('_', ' '),
         "iss": gi_creds['gi_id'],
         "exp" : int(time.time())+3600*8
 
@@ -134,7 +134,7 @@ def token_exchange(jwt):
     url = 'https://webexapis.com/v1/jwt/login'
     resp = requests.post(url, headers=headers)
     print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {''}\n\nResponse\n")
-    print(resp.json())
+    print(resp.json()['token'])
     return resp.json()
     
 
