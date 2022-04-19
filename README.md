@@ -80,6 +80,8 @@ npm dependencies installieren mit:
 ``npm install``
 Bei SSL issues:
 ``npm config set strict-ssl false``
+Bei SSL-Issues mit Python
+`pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r .\requirements.txt`
 ##### Step 6 Programm Starten
 Sobald alles installiert ist kann das Pythonskript über folgenden Kommand (dasselbe Terminal benutzen) ausgeführt werden:
 ``py main.py``
