@@ -13,37 +13,41 @@ with open('credentials.json', 'r') as c:
 int_creds = creds['integration_creds']
 gi_creds = creds['guest_issuer']
 token = creds['token']
+SSL_FLAG = True
 
 
 def create_meeting(title: str, start, end):
     url = "https://webexapis.com/v1/meetings"
 
     payload = json.dumps({
-    "enabledAutoRecordMeeting": False,
-    "allowAnyUserToBeCoHost": False,
-    "enabledJoinBeforeHost": True,
-    "enableConnectAudioBeforeHost": False,
-    "excludePassword": True,
-    "publicMeeting": False,
-    "enabledWebcastView": False,
-    "enableAutomaticLock": False,
-    "allowFirstUserToBeCoHost": False,
-    "allowAuthenticatedDevices": False,
-    "sendEmail": False,
-    "title": title.replace('_', ' '),
-    "start": start,
-    "end": end,
-    "timezone": "Europe/Vienna"
+        "enabledAutoRecordMeeting": False,
+        "allowAnyUserToBeCoHost": True,
+        "enabledJoinBeforeHost": True,
+        "enableConnectAudioBeforeHost": False,
+        "excludePassword": True,
+        "publicMeeting": False,
+        "enabledWebcastView": False,
+        "enableAutomaticLock": False,
+        "allowFirstUserToBeCoHost": False,
+        "allowAuthenticatedDevices": False,
+        "sendEmail": False,
+        "title": title.replace('_', ' '),
+        "start": start,
+        "end": end,
+        "timezone": "Europe/Vienna"
     })
     headers = {
-    'Authorization': f'Bearer {token["access_token"]}',
-    'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token["access_token"]}',
+        'Content-Type': 'application/json',
     }
-    response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
-    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
+    response = requests.request(
+        "POST", url, headers=headers, data=payload, verify=SSL_FLAG)
+    print(
+        f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
     text = response.json()
-    print(f"Meeting Created! {text['id']}, Meeting No: {text['meetingNumber']}")
+    print(text)
+    print(
+        f"\n\nMeeting Created! {text['id']}, Meeting No: {text['meetingNumber']}")
     meetings = list()
     try:
         meetings_db = open('meetings.json', 'r')
@@ -53,27 +57,32 @@ def create_meeting(title: str, start, end):
         print(e)
     meetings.append(text)
     meetings_db = open('meetings.json', 'w+')
-    json.dump(meetings, meetings_db, indent = 4)
+    json.dump(meetings, meetings_db, indent=4)
+    return response.json()
+
 
 def login():
     webbrowser.open(int_creds['auth_uri'])
 
+
 def authorize(code):
     url = "https://webexapis.com/v1/access_token"
+    global token
 
     payload = json.dumps({
-    "grant_type": int_creds['grant_type'],
-    "client_id": int_creds['client_id'],
-    "client_secret": int_creds['client_secret'],
-    "code": code,
-    "redirect_uri": int_creds['redirect_uri']
+        "grant_type": int_creds['grant_type'],
+        "client_id": int_creds['client_id'],
+        "client_secret": int_creds['client_secret'],
+        "code": code,
+        "redirect_uri": int_creds['redirect_uri']
     })
     headers = {
-    'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
+    print(
+        f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
     print(response.json())
     token = response.json()
     data = ''
@@ -83,25 +92,28 @@ def authorize(code):
         data['token'] = token
         json.dump(data, c, indent=4)
 
+
 def add_part(name, mail, meeting_id):
     url = "https://webexapis.com/v1/meetingInvitees"
 
     payload = json.dumps({
-    "email": mail,
-    "displayName": name,
-    "meetingId": meeting_id,
-    "coHost": False,
-    "panelist": False,
-    "sendEmail": False
+        "email": mail,
+        "displayName": name,
+        "meetingId": meeting_id,
+        "coHost": False,
+        "panelist": False,
+        "sendEmail": False
     })
     headers = {
-    'Authorization': f'Bearer {token["access_token"]}',
-    'Content-Type': 'application/json',
-}
+        'Authorization': f'Bearer {token["access_token"]}',
+        'Content-Type': 'application/json',
+    }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
-    print(response.status_code)
+    response = requests.request(
+        "POST", url, headers=headers, data=payload,  verify=SSL_FLAG)
+    print(
+        f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {payload}\n\nResponse\n")
+    print(response.text)
     print("participant added")
 
 
@@ -117,13 +129,13 @@ def goto_meeting(meeting_id):
 
 def create_jwt(sub, name):
     payload = {
-        "sub":sub,
+        "sub": sub,
         "name": name.replace('_', ' '),
         "iss": gi_creds['gi_id'],
-        "exp" : int(time.time())+3600*8
+        "exp": int(time.time())+3600*8
 
     }
-    decoded_secret =base64.b64decode(gi_creds['gi_secret'])
+    decoded_secret = base64.b64decode(gi_creds['gi_secret'])
     code = jwt.encode(payload, decoded_secret, algorithm='HS256')
     print(code)
     return code
@@ -132,11 +144,11 @@ def create_jwt(sub, name):
 def token_exchange(jwt):
     headers = {'Authorization': f'Bearer {jwt}'}
     url = 'https://webexapis.com/v1/jwt/login'
-    resp = requests.post(url, headers=headers)
-    print(f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {''}\n\nResponse\n")
+    resp = requests.post(url, headers=headers,  verify=SSL_FLAG)
+    print(
+        f"\nPOST\nURL:     {url}\nHEADERS: {headers}\nPAYLOAD: {''}\n\nResponse\n")
     print(resp.json()['token'])
     return resp.json()
-    
 
 
 def create_widget(meeting, token):
@@ -161,6 +173,54 @@ def create_widget(meeting, token):
         app.write(widget)
 
 
+def get_me(token):
+    url = "https://webexapis.com/v1/people/me"
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.request(
+        "GET", url, headers=headers, verify=SSL_FLAG)
+    print(
+        f"\nGET\nURL:     {url}\nHEADERS: {headers}\n\nResponse\n")
+    print(response.json())
+    return response.json()
+
+
+def demo():
+    meet = {'meetingNumber': 'brucewayne@kbcg.eu'}
+    sub = 'testusr'
+    print('Guided Demo')
+    print('1. Please Login to webex and provide the authorization code')
+    login()
+    inp = input('> ')
+    authorize(inp)
+    print('2. Do you want to create a meeting? (y/n). n will use the demo meeting')
+    inp = input('> ')
+    while True:
+        if inp == 'y':
+            print('3. Please provide the title of the meeting')
+            title = input('> ')
+            print('4. Please provide the start time of the meeting (yyyy-mm-ddThh:mm:ss)')
+            start = input('> ')
+            print('5. Please provide the end time of the meeting (yyyy-mm-ddThh:mm:ss)')
+            end = input('> ')
+            meet = create_meeting(title, start, end)
+            break
+        elif inp == 'n':
+            break
+        else:
+            print('Please enter y or n')
+            inp = input('> ')
+    print('6. Please provide the name of the participant')
+    name = input('> ')
+    jwt = create_jwt(sub, name)
+    token = token_exchange(jwt)
+    create_widget(meet['meetingNumber'], token['token'])
+    print('7. Done. Type npm start to join the meeting')
+    exit()
+
+
 def shell():
     print('ich.app demoscript: ')
     help = '''
@@ -176,7 +236,8 @@ def shell():
     8.  create widget -> widget <meeting> <token>
     9.  authorize webex integration -> login
     10. create oauth access token -> auth <code>
-
+    11. guided demo -> start
+    12. get details of guest user -> me 
     '''
     while True:
         try:
@@ -202,15 +263,18 @@ def shell():
                 login()
             elif inp[0] == 'auth':
                 authorize(inp[1])
+            elif inp[0] == 'start':
+                demo()
+            elif inp[0] == 'me':
+                get_me(inp[1])
         except KeyboardInterrupt as e:
             exit()
         except Exception as e:
             print(traceback.format_exc())
 
-        
+
 def main():
     shell()
-
 
 
 if __name__ == '__main__':
