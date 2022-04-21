@@ -76,7 +76,7 @@ Dieser JWT muss dann in einen OAuth2 Token umgewandelt werden (ist noch eine Lim
 
 ### Webex React Widget
 
-Falls die Registrierung erfolgreich gewesen ist, wird der User nun zum letzten Teil der App weitergeleitet, nämlich zum Meeting. Das Meeting ist ein React Widget der von voll konfigurierbar und anpassbar ist
+Falls die Registrierung erfolgreich gewesen ist, wird der User nun zum letzten Teil der App weitergeleitet, nämlich zum Meeting. Das Meeting ist ein React Widget der von voll konfigurierbar und anpassbar ist. Dokumentation [hier](https://developer.webex.com/docs/widgets), eine weitere demo, [hier](https://github.com/WebexSamples/webex-meeting-widget-starter).
 ![API Sequenzdiagramm](blob/widget.PNG)
 
 ## Inbetriebnahme
